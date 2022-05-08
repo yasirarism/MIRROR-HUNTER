@@ -232,6 +232,7 @@ try:
     AUTO_DELETE_UPLOAD_MESSAGE_DURATION = int(getConfig('AUTO_DELETE_UPLOAD_MESSAGE_DURATION'))
     TELEGRAM_API = getConfig('TELEGRAM_API')
     TELEGRAM_HASH = getConfig('TELEGRAM_HASH')
+    RESTARTED_GROUP_ID = getConfig('RESTARTED_GROUP_ID')
 except:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
@@ -591,10 +592,10 @@ except KeyError:
 try:
     CHANNEL_USERNAME: str = getConfig('CHANNEL_USERNAME').replace("@", "")
     if len(CHANNEL_USERNAME) == 0:
-        CHANNEL_USERNAME = 'heliosmirror'
+        CHANNEL_USERNAME = 'AnimeDynastyEN'
 except KeyError:
     logging.warning('CHANNEL_USERNAME not provided')
-    CHANNEL_USERNAME = 'heliosmirror'
+    CHANNEL_USERNAME = 'AnimeDynastyEN'
 
 try:
     LEECH_ENABLED = getConfig('LEECH_ENABLED')
