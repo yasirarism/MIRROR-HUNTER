@@ -16,7 +16,7 @@ from bot import bot, Interval, OWNER_ID, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOU
                  BLOCK_MEGA_FOLDER, BLOCK_MEGA_LINKS, VIEW_LINK, aria2, QB_SEED, \
                 dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER, \
                 MIRROR_LOGS, BOT_PM, CHANNEL_USERNAME, LEECH_ENABLED, AUTO_DELETE_UPLOAD_MESSAGE_DURATION, FSUB, \
-                FSUB_CHANNEL_ID, LEECH_LOG, SOURCE_LINK, LEECH_LOG_ALT, MEGAREST, LINK_LOGS
+                FSUB_CHANNEL_ID, LEECH_LOG, SOURCE_LINK, LEECH_LOG_ALT, MEGAREST, LINK_LOGS, INCOMPLETE_TASK_NOTIFIER, DB_URI
 from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_gdtot_link, is_mega_link, is_gdrive_link, get_content_type, get_mega_link_type
 from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split as fssplit, clean_download
 from bot.helper.ext_utils.shortenurl import short_url
@@ -39,6 +39,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages, auto_delete_message, auto_delete_upload_message, sendStatusMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
+from bot.helper.ext_utils.db_handler import DbManger
 
 
 class MirrorListener:
@@ -55,6 +56,7 @@ class MirrorListener:
         self.tag = tag
         self.user_id = self.message.from_user.id
         self.__chat_id = self.message.chat.id
+        self.isPrivate = self.message.chat.type in ['private', 'group']
 
     def clean(self):
         try:
@@ -64,8 +66,10 @@ class MirrorListener:
             delete_all_messages()
         except IndexError:
             pass
-    def onDownloadStarted(self):
-        pass
+
+    def onDownloadStart(self):
+        if not self.isPrivate and INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
+            DbManger().add_incomplete_task(self.message.chat.id, self.message.link, self.tag)
 
     def onDownloadProgress(self):
         # We are handling this on our own!
@@ -198,9 +202,15 @@ class MirrorListener:
             self.clean()
         else:
             update_all_messages()
+
+        if not self.isPrivate and INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
+            DbManger().rm_complete_task(self.message.link)
         Thread(target=auto_delete_message, args=(bot, self.message, msg)).start()
 
     def onUploadComplete(self, link: str, size, files, folders, typ, name: str):
+        if not self.isPrivate and INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
+            DbManger().rm_complete_task(self.message.link)
+        msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"
         uname = f'<a href="tg://user?id={self.message.from_user.id}">{self.message.from_user.first_name}</a>'
         chat_id = str(LEECH_LOG)[5:][:-1]
         buttons = ButtonMaker()
@@ -399,7 +409,8 @@ class MirrorListener:
             self.clean()
         else:
             update_all_messages()
-        Thread(target=auto_delete_message, args=(bot, self.message, msg)).start()
+        if not self.isPrivate and INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
+            DbManger().rm_complete_task(self.message.link)
 
 def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None, multi=0):
     uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'

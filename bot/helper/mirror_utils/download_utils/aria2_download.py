@@ -79,7 +79,7 @@ def __onDownloadComplete(api, gid):
 
 @new_thread
 def __onDownloadStopped(api, gid):
-    sleep(4)
+    sleep(6)
     dl = getDownloadByGid(gid)
     if dl:
         dl.getListener().onDownloadError('Dead torrent!')
@@ -117,6 +117,7 @@ def add_aria2c_download(link: str, path, listener, filename):
     with download_dict_lock:
         download_dict[listener.uid] = AriaDownloadStatus(download.gid, listener)
         LOGGER.info(f"Started: {download.gid} DIR: {download.dir} ")
+    listener.onDownloadStart()
     sendStatusMessage(listener.update, listener.bot)
 
 start_listener()
