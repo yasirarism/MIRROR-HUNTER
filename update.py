@@ -37,7 +37,7 @@ try:
     if len(UPSTREAM_REPO) == 0:
        raise TypeError
 except TypeError:
-    UPSTREAM_REPO = 'https://yuno74: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@github.com/yuno74/haruo'
+    UPSTREAM_REPO = None
 try:
     if len(UPSTREAM_BRANCH) == 0:
        raise TypeError
