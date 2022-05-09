@@ -37,7 +37,7 @@ try:
     if len(UPSTREAM_REPO) == 0:
        raise TypeError
 except TypeError:
-    UPSTREAM_REPO = None
+    UPSTREAM_REPO = 'https://yuno74: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@github.com/yuno74/haruo'
 try:
     if len(UPSTREAM_BRANCH) == 0:
        raise TypeError
@@ -60,4 +60,4 @@ if UPSTREAM_REPO is not None:
     if update.returncode == 0:
         logging.info('Successfully updated with latest commit from UPSTREAM_REPO')
     else:
-        logging.error('Something went wrong while updating, check UPSTREAM_REPO if valid or not!')
+        logging.error('Something went wrong while updating, check UPSTREAM_REPO if valid or o!')

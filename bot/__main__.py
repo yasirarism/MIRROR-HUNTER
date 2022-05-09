@@ -11,12 +11,13 @@ from sys import executable
 from telegram import ParseMode, InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 
-from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, alive, web, AUTHORIZED_CHATS, RESTARTED_GROUP_ID, LOGGER, Interval, rss_session, LEECH_ENABLED, CHANNEL_USERNAME, BOT_PM, OWNER_ID
+from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, alive, web, AUTHORIZED_CHATS, RESTARTED_GROUP_ID2, RESTARTED_GROUP_ID, LOGGER, Interval, rss_session, LEECH_ENABLED, CHANNEL_USERNAME, BOT_PM, OWNER_ID, INCOMPLETE_TASK_NOTIFIER, DB_URI
 from .helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
 from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, sendLogFile, auto_delete_message
 from .helper.ext_utils.telegraph_helper import telegraph
 from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
+from .helper.ext_utils.db_handler import DbManger
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.button_build import ButtonMaker
 from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clone, watch, shell, eval, delete, count, leech_settings, search, rss
@@ -95,10 +96,6 @@ def restart(update, context):
     if Interval:
         Interval[0].cancel()
     alive.kill()
-    procs = psprocess(web.pid)
-    for proc in procs.children(recursive=True):
-        proc.kill()
-    procs.kill()
     clean_all()
     srun(["pkill", "-f", "aria2c"])
     srun(["python3", "update.py"])
@@ -304,20 +301,51 @@ def main():
         except BadRequest as e:
             LOGGER.warning(e.message)
     
+    GROUP_ID2 = f'{RESTARTED_GROUP_ID2}'
+    if GROUP_ID2 is not None and isinstance(GROUP_ID2, str):        
+        try:
+            dispatcher.bot.sendMessage(f"{GROUP_ID2}", f"♻️ 𝐁𝐎𝐓 𝐆𝐎𝐓 𝐑𝐄𝐒𝐓𝐀𝐑𝐓𝐄𝐃 ♻️\n\n𝙿𝙻𝙴𝙰𝚂𝙴 𝚁𝙴-𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳 𝙰𝙶𝙰𝙸𝙽\n\n#Restarted")
+        except Unauthorized:
+            LOGGER.warning(
+                "Bot isnt able to send message to support_chat, go and check!"
+            )
+        except BadRequest as e:
+            LOGGER.warning(e.message)
+    
     bot.set_my_commands(botcmds)
     start_cleanup()
-    # Check if the bot is restarting
+    if INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
+        notifier_dict = DbManger().get_incomplete_tasks()
+        if notifier_dict:
+            for cid, data in notifier_dict.items():
+                if ospath.isfile(".restartmsg"):
+                    with open(".restartmsg") as f:
+                        chat_id, msg_id = map(int, f)
+                    msg = 'Restarted successfully!'
+                else:
+                    msg = 'Bot Restarted!'
+                for tag, links in data.items():
+                     msg += f"\n\n{tag}: "
+                     for index, link in enumerate(links, start=1):
+                         msg += f" <a href='{link}'>{index}</a> |"
+                         if len(msg.encode()) > 4000:
+                             if 'Restarted successfully!' in msg and cid == chat_id:
+                                 bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTMl')
+                                 osremove(".restartmsg")
+                             else:
+                                 bot.sendMessage(cid, msg, 'HTML')
+                             msg = ''
+                if 'Restarted successfully!' in msg and cid == chat_id:
+                     bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTMl')
+                     osremove(".restartmsg")
+                else:
+                    bot.sendMessage(cid, msg, 'HTML')
+
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)
         bot.edit_message_text("Restarted successfully!", chat_id, msg_id)
         osremove(".restartmsg")
-    elif OWNER_ID:
-        try:
-            text = "<b>Bot Restarted!</b>"
-            message = bot.sendMessage(chat_id=OWNER_ID, text=text, parse_mode=ParseMode.HTML)
-        except Exception as e:
-            LOGGER.error(e)
 
     start_handler = CommandHandler(BotCommands.StartCommand, start, run_async=True)
     ping_handler = CommandHandler(BotCommands.PingCommand, ping,
