@@ -1,7 +1,7 @@
 FROM arata74/mirrorclone
-WORKDIR /usr/src/app
-RUN chmod 777 /usr/src/app
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+WORKDIR /usr/src/YasirBot
+RUN chmod 777 /usr/src/YasirBot
+COPY yasir_req.txt .
+RUN pip3 install --no-cache-dir -r yasir_req.txt
 COPY . .
 CMD ["bash", "start.sh"]
