@@ -232,8 +232,6 @@ try:
     AUTO_DELETE_UPLOAD_MESSAGE_DURATION = int(getConfig('AUTO_DELETE_UPLOAD_MESSAGE_DURATION'))
     TELEGRAM_API = getConfig('TELEGRAM_API')
     TELEGRAM_HASH = getConfig('TELEGRAM_HASH')
-    RESTARTED_GROUP_ID = getConfig('RESTARTED_GROUP_ID')
-    RESTARTED_GROUP_ID2 = getConfig('RESTARTED_GROUP_ID2')
 except:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
