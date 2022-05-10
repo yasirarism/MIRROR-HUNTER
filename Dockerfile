@@ -1,4 +1,4 @@
-FROM arata74/mirrorclone
+FROM yasirarism/yasiruprobot
 WORKDIR /usr/src/YasirBot
 RUN chmod 777 /usr/src/YasirBot
 COPY yasir_req.txt .
