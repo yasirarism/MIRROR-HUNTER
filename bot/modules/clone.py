@@ -144,13 +144,13 @@ def cloneNode(update, context, multi=0):
         cc = f'\n\n<b>#Cloned By: </b>{tag}'
         if button in ["cancelled", ""]:
             sendMessage(f"{tag} {result}", context.bot, update)
-        else:
-            if AUTO_DELETE_UPLOAD_MESSAGE_DURATION != -1:
-                auto_delete_message = int(AUTO_DELETE_UPLOAD_MESSAGE_DURATION / 60)
-                if update.message.chat.type == 'private':
-                    warnmsg = ''
-                else:
-                    warnmsg = f'\n<b>This message will be deleted in <i>{auto_delete_message} minutes</i> from this group.</b>\n'
+        elif AUTO_DELETE_UPLOAD_MESSAGE_DURATION != -1:
+            auto_delete_message = int(AUTO_DELETE_UPLOAD_MESSAGE_DURATION / 60)
+            warnmsg = (
+                ''
+                if update.message.chat.type == 'private'
+                else f'\n<b>This message will be deleted in <i>{auto_delete_message} minutes</i> from this group.</b>\n'
+            )
         if BOT_PM and update.message.chat.type != 'private':
             pmwarn = f"\n<b>I have sent links in PM.</b>\n"
         elif update.message.chat.type == 'private':

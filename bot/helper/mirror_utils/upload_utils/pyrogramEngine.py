@@ -99,7 +99,7 @@ class TgUploader:
                     else:
                         width, height = get_video_resolution(up_path)
                     if not file_.upper().endswith(("MKV", "MP4")):
-                        file_ = ospath.splitext(file_)[0] + '.mp4'
+                        file_ = f'{ospath.splitext(file_)[0]}.mp4'
                         new_path = ospath.join(dirpath, file_)
                         osrename(up_path, new_path)
                         up_path = new_path
@@ -178,12 +178,8 @@ class TgUploader:
                             LOGGER.warning("Image Leech is Blocked by Owner")
                     else:
                         LOGGER.warning("Image Leech is Blocked by Owner")
-                        pass
-
                 elif file_.upper().endswith(TEXT_SUFFIXES):
                     LOGGER.warning("Useless Text/Html file found, Not Uploading")
-                    pass
-
                 else:
                     notMedia = True
             if self.__as_doc or notMedia:

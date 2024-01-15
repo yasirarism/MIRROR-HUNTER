@@ -19,8 +19,7 @@ from bot.helper.telegram_helper import button_build
 if SEARCH_PLUGINS is not None:
     PLUGINS = []
     qbclient = get_client()
-    qb_plugins = qbclient.search_plugins()
-    if qb_plugins:
+    if qb_plugins := qbclient.search_plugins():
         for plugin in qb_plugins:
             qbclient.search_uninstall_plugin(names=plugin['name'])
     qbclient.search_install_plugin(SEARCH_PLUGINS)
@@ -70,10 +69,10 @@ def torser(update, context):
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
         button = InlineKeyboardMarkup(buttons.build_menu(2))
         sendMarkup('Choose tool to search:', context.bot, update, button)
-    elif SEARCH_API_LINK is not None and SEARCH_PLUGINS is None:
+    elif SEARCH_API_LINK is not None:
         button = _api_buttons(user_id, "apisearch")
         sendMarkup('Choose site to search:', context.bot, update, button)
-    elif SEARCH_API_LINK is None and SEARCH_PLUGINS is not None:
+    else:
         button = _plugin_buttons(user_id)
         sendMarkup('Choose site to search:', context.bot, update, button)
 
@@ -82,10 +81,7 @@ def torserbut(update, context):
     user_id = query.from_user.id
     message = query.message
     key = message.reply_to_message.text.split(" ", maxsplit=1)
-    if len(key) > 1:
-        key = key[1]
-    else:
-        key = None
+    key = key[1] if len(key) > 1 else None
     data = query.data
     data = data.split(" ")
     if user_id != int(data[1]):
@@ -104,10 +100,10 @@ def torserbut(update, context):
         method = data[3]
         if method.startswith('api'):
             if key is None:
-                if method == 'apitrend':
-                    endpoint = 'Trending'
-                elif method == 'apirecent':
+                if method == 'apirecent':
                     endpoint = 'Recent'
+                elif method == 'apitrend':
+                    endpoint = 'Trending'
                 editMessage(f"<b>Listing {endpoint} Items...\nTorrent Site:- <i>{SITES.get(site)}</i></b>", message)
             else:
                 editMessage(f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>", message)
@@ -141,17 +137,16 @@ def _search(key, site, message, method):
         try:
             resp = rget(api)
             search_results = resp.json()
-            if "error" not in search_results.keys():
-                msg = f"<b>Found {min(search_results['total'], TELEGRAPH_LIMIT)}</b>"
-                if method == 'apitrend':
-                    msg += f" <b>trending result(s)\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
-                elif method == 'apirecent':
-                    msg += f" <b>recent result(s)\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
-                else:
-                    msg += f" <b>result(s) for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
-                search_results = search_results['data']
-            else:
+            if "error" in search_results.keys():
                 return editMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i>", message)
+            msg = f"<b>Found {min(search_results['total'], TELEGRAPH_LIMIT)}</b>"
+            if method == 'apitrend':
+                msg += f" <b>trending result(s)\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
+            elif method == 'apirecent':
+                msg += f" <b>recent result(s)\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
+            else:
+                msg += f" <b>result(s) for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
+            search_results = search_results['data']
         except Exception as e:
             return editMessage(str(e), message)
     else:
@@ -167,11 +162,10 @@ def _search(key, site, message, method):
         dict_search_results = client.search_results(search_id=search_id)
         search_results = dict_search_results.results
         total_results = dict_search_results.total
-        if total_results != 0:
-            msg = f"<b>Found {min(total_results, TELEGRAPH_LIMIT)}</b>"
-            msg += f" <b>result(s) for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>"
-        else:
+        if total_results == 0:
             return editMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i>", message)
+        msg = f"<b>Found {min(total_results, TELEGRAPH_LIMIT)}</b>"
+        msg += f" <b>result(s) for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>"
     link = _getResult(search_results, key, message, method)
     buttons = button_build.ButtonMaker()
     buttons.buildbutton("🔎 VIEW", link)
@@ -182,12 +176,12 @@ def _search(key, site, message, method):
 
 def _getResult(search_results, key, message, method):
     telegraph_content = []
-    if method == 'apisearch':
+    if method == 'apirecent':
+        msg = "<h4>API Recent Results</h4>"
+    elif method == 'apisearch':
         msg = f"<h4>API Search Result(s) For {key}</h4>"
     elif method == 'apitrend':
-        msg = f"<h4>API Trending Results</h4>"
-    elif method == 'apirecent':
-        msg = f"<h4>API Recent Results</h4>"
+        msg = "<h4>API Trending Results</h4>"
     else:
         msg = f"<h4>PLUGINS Search Result(s) For {key}</h4>"
     for index, result in enumerate(search_results, start=1):
@@ -250,8 +244,7 @@ def _api_buttons(user_id, method):
     for data, name in SITES.items():
         buttons.sbutton(name, f"torser {user_id} {data} {method}")
     buttons.sbutton("Cancel", f"torser {user_id} cancel")
-    button = InlineKeyboardMarkup(buttons.build_menu(2))
-    return button
+    return InlineKeyboardMarkup(buttons.build_menu(2))
 
 def _plugin_buttons(user_id):
     buttons = button_build.ButtonMaker()
@@ -265,8 +258,7 @@ def _plugin_buttons(user_id):
         buttons.sbutton(siteName.capitalize(), f"torser {user_id} {siteName} plugin")
     buttons.sbutton('All', f"torser {user_id} all plugin")
     buttons.sbutton("Cancel", f"torser {user_id} cancel")
-    button = InlineKeyboardMarkup(buttons.build_menu(2))
-    return button
+    return InlineKeyboardMarkup(buttons.build_menu(2))
 
 
 torser_handler = CommandHandler(BotCommands.SearchCommand, torser, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)

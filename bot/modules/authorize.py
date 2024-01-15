@@ -115,11 +115,7 @@ def addleechlog(update, context):
                 file.write(f'{user_id}\n')
                 msg = 'User added in Leech Logs'
     elif reply_message is None:
-        # Trying to add a chat in leech logs
-        if len(message_) == 2:
-            chat_id = int(message_[1])
-        else:
-            chat_id = update.effective_chat.id
+        chat_id = update.effective_chat.id
         if chat_id in LEECH_LOG:
             msg = 'Chat Already exist in Leech Logs!'
         elif DB_URI is not None:
@@ -162,11 +158,7 @@ def rmleechlog(update, context):
         else:
             msg = 'User does not exist in leech logs'
     elif reply_message is None:
-        # Trying to remove a chat from leech log
-        if len(message_) == 2:
-            chat_id = int(message_[1])
-        else:
-            chat_id = update.effective_chat.id
+        chat_id = update.effective_chat.id
         if chat_id in LEECH_LOG:
             if DB_URI is not None:
                 msg = DbManger().rmleech_log(chat_id)
@@ -213,11 +205,7 @@ def addleechlog_alt(update, context):
                 file.write(f'{user_id}\n')
                 msg = 'User added in Leech Logs'
     elif reply_message is None:
-        # Trying to add a chat in leech logs
-        if len(message_) == 2:
-            chat_id = int(message_[1])
-        else:
-            chat_id = update.effective_chat.id
+        chat_id = update.effective_chat.id
         if chat_id in LEECH_LOG_ALT:
             msg = 'Chat Already exist in Leech Logs!'
         elif DB_URI is not None:
@@ -260,11 +248,7 @@ def rmleechlog_alt(update, context):
         else:
             msg = 'User does not exist in leech logs'
     elif reply_message is None:
-        # Trying to remove a chat from leech log
-        if len(message_) == 2:
-            chat_id = int(message_[1])
-        else:
-            chat_id = update.effective_chat.id
+        chat_id = update.effective_chat.id
         if chat_id in LEECH_LOG_ALT:
             if DB_URI is not None:
                 msg = DbManger().rmleech_log_alt(chat_id)
@@ -333,10 +317,7 @@ def removeSudo(update, context):
     if len(message_) == 2:
         user_id = int(message_[1])
         if user_id in SUDO_USERS:
-            if DB_URI is not None:
-                msg = DbManger().user_rmsudo(user_id)
-            else:
-                msg = 'Demoted'
+            msg = DbManger().user_rmsudo(user_id) if DB_URI is not None else 'Demoted'
             SUDO_USERS.remove(user_id)
         else:
             msg = 'Not sudo user to demote!'
@@ -345,10 +326,7 @@ def removeSudo(update, context):
     else:
         user_id = reply_message.from_user.id
         if user_id in SUDO_USERS:
-            if DB_URI is not None:
-                msg = DbManger().user_rmsudo(user_id)
-            else:
-                msg = 'Demoted'
+            msg = DbManger().user_rmsudo(user_id) if DB_URI is not None else 'Demoted'
             SUDO_USERS.remove(user_id)
         else:
             msg = 'Not sudo user to demote!'
@@ -401,10 +379,7 @@ def removeMod(update, context):
     if len(message_) == 2:
         user_id = int(message_[1])
         if user_id in MOD_USERS:
-            if DB_URI is not None:
-                msg = DbManger().user_rmmod(user_id)
-            else:
-                msg = 'Demoted'
+            msg = DbManger().user_rmmod(user_id) if DB_URI is not None else 'Demoted'
             MOD_USERS.remove(user_id)
         else:
             msg = 'Not Moderator to demote!'
@@ -413,10 +388,7 @@ def removeMod(update, context):
     else:
         user_id = reply_message.from_user.id
         if user_id in MOD_USERS:
-            if DB_URI is not None:
-                msg = DbManger().user_rmmod(user_id)
-            else:
-                msg = 'Demoted'
+            msg = DbManger().user_rmmod(user_id) if DB_URI is not None else 'Demoted'
             MOD_USERS.remove(user_id)
         else:
             msg = 'Not Moderator to demote!'

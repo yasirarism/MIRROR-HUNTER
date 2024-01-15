@@ -79,7 +79,7 @@ def _watch(bot, update, isZip=False, isLeech=False, tag=None, multi=0):
 
     reply_to = update.message.reply_to_message
     if reply_to is not None:
-        if len(link) == 0:
+        if not link:
             link = reply_to.text.strip()
         if reply_to.from_user.username:
             tag = f"@{reply_to.from_user.username}"
@@ -87,8 +87,7 @@ def _watch(bot, update, isZip=False, isLeech=False, tag=None, multi=0):
             tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
 
     if not is_url(link):
-        help_msg = "Send link along with command line"
-        help_msg += "\nor reply to link or file"
+        help_msg = "Send link along with command line" + "\nor reply to link or file"
         message = sendMessage(help_msg, bot, update)
         Thread(target=auto_delete_message, args=(bot, update.message, message)).start()
         return
@@ -102,7 +101,7 @@ def _watch(bot, update, isZip=False, isLeech=False, tag=None, multi=0):
         result = ydl.extractMetaData(link, name, args, True)
     except Exception as e:
         msg = str(e).replace('<', ' ').replace('>', ' ')
-        message =  sendMessage(tag + " " + msg, bot, update)
+        message = sendMessage(f"{tag} {msg}", bot, update)
         Thread(target=auto_delete_message, args=(bot, update.message, message)).start()
         return
     if 'entries' in result:
@@ -141,20 +140,20 @@ def _watch(bot, update, isZip=False, isLeech=False, tag=None, multi=0):
                 if quality in formats_dict:
                     formats_dict[quality][frmt['tbr']] = size
                 else:
-                    subformat = {}
-                    subformat[frmt['tbr']] = size
+                    subformat = {frmt['tbr']: size}
                     formats_dict[quality] = subformat
 
-            for forDict in formats_dict:
-                if len(formats_dict[forDict]) == 1:
+            for forDict, value in formats_dict.items():
+                if len(value) == 1:
                     qual_fps_ext = resplit(r'p|-', forDict, maxsplit=2)
                     height = qual_fps_ext[0]
                     fps = qual_fps_ext[1]
                     ext = qual_fps_ext[2]
-                    if fps != '':
-                        video_format = f"bv*[height={height}][fps={fps}][ext={ext}]"
-                    else:
-                        video_format = f"bv*[height={height}][ext={ext}]"
+                    video_format = (
+                        f"bv*[height={height}][fps={fps}][ext={ext}]"
+                        if fps != ''
+                        else f"bv*[height={height}][ext={ext}]"
+                    )
                     size = list(formats_dict[forDict].values())[0]
                     buttonName = f"{forDict} ({get_readable_file_size(size)})"
                     buttons.sbutton(str(buttonName), f"qu {msg_id} {video_format}")
