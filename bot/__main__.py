@@ -83,14 +83,13 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
     else:
         if BOT_PM:
             message = sendMessage(f'Dear {uname},\n\n<b>NOTE:</b> All The Uploaded Links and Leeched Files By You Will Be Sent Here In Your Private Chat From Now.', context.bot, update)
-            Thread(target=auto_delete_message, args=(context.bot, update.message, message)).start()
-            return
         else:
             message = sendMarkup(
                 f'Dear {uname},You have started me\n\n',
                 context.bot, update, reply_markup)
-            Thread(target=auto_delete_message, args=(context.bot, update.message, message)).start()
-            return
+
+        Thread(target=auto_delete_message, args=(context.bot, update.message, message)).start()
+        return
 def restart(update, context):
     restart_message = sendMessage("Restarting...", context.bot, update)
     if Interval:
@@ -293,8 +292,7 @@ def main():
     bot.set_my_commands(botcmds)
     start_cleanup()
     if INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
-        notifier_dict = DbManger().get_incomplete_tasks()
-        if notifier_dict:
+        if notifier_dict := DbManger().get_incomplete_tasks():
             for cid, data in notifier_dict.items():
                 if ospath.isfile(".restartmsg"):
                     with open(".restartmsg") as f:

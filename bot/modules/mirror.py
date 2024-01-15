@@ -88,7 +88,7 @@ class MirrorListener:
             try:
                 with download_dict_lock:
                     download_dict[self.uid] = ZipStatus(name, m_path, size)
-                path = m_path + ".zip"
+                path = f"{m_path}.zip"
                 LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
                 if self.pswd is not None:
                     if self.isLeech and int(size) > TG_SPLIT_SIZE:
@@ -119,7 +119,7 @@ class MirrorListener:
                     for dirpath, subdir, files in walk(m_path, topdown=False):
                         for file_ in files:
                             if file_.endswith(".zip") or search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$', file_) \
-                               or (file_.endswith(".rar") and not search(r'\.part\d+\.rar$', file_)):
+                                   or (file_.endswith(".rar") and not search(r'\.part\d+\.rar$', file_)):
                                 m_path = ospath.join(dirpath, file_)
                                 if self.pswd is not None:
                                     result = srun(["7z", "x", f"-p{self.pswd}", m_path, f"-o{dirpath}", "-aot"])
@@ -246,10 +246,11 @@ class MirrorListener:
             if reply_to is not None:
                 reply_to.delete()
             auto_delete_message = int(AUTO_DELETE_UPLOAD_MESSAGE_DURATION / 60)
-            if self.message.chat.type == 'private':
-                warnmsg = ''
-            else:
-                warnmsg = f'\n<b>This message will be deleted in <i>{auto_delete_message} minutes</i> from this group.</b>\n'
+            warnmsg = (
+                ''
+                if self.message.chat.type == 'private'
+                else f'\n<b>This message will be deleted in <i>{auto_delete_message} minutes</i> from this group.</b>\n'
+            )
         else:
             warnmsg = ''
         if BOT_PM and self.message.chat.type != 'private':
@@ -261,7 +262,6 @@ class MirrorListener:
         else:
             pmwarn = ''
             pmwarn_mirror = ''
-        logwarn = f"\n<b>I have sent files in Log Channel.</b>\n"
         if self.isLeech:
             count = len(files)
             msg += f'\n<b>Total Files: </b>{count}'
@@ -298,6 +298,7 @@ class MirrorListener:
 
             else:
                 fmsg = '\n\n'
+                logwarn = f"\n<b>I have sent files in Log Channel.</b>\n"
                 for index, item in enumerate(list(files), start=1):
                     msg_id = files[item]
                     link = f"https://t.me/c/{chat_id}/{msg_id}"

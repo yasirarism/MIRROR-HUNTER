@@ -132,7 +132,7 @@ def _qb_listener(listener, client, ext_hash, select, path):
                     if qbname.endswith('.!qB'):
                         qbname = ospath.splitext(qbname)[0]
                     if listener.isZip:
-                        qbname = qbname + ".zip"
+                        qbname = f"{qbname}.zip"
                     elif listener.extract:
                         try:
                            qbname = get_base_name(qbname)
@@ -237,8 +237,7 @@ def get_confirm(update, context):
 
 def _get_hash_magnet(mgt):
     if mgt.startswith('magnet:'):
-        hash_ = search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
-        return hash_
+        return search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
 
 def _get_hash_file(path):
     with open(path, "rb") as f:
